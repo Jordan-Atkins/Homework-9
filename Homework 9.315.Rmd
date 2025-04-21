@@ -1,0 +1,187 @@
+---
+title: "Homework 9.315"
+author: "Jordan Atkins"
+date: "2025-04-21"
+output: 
+ html_document: 
+  toc: true
+  toc_depth: 2
+  toc_float: true
+---
+
+# Homework 9
+
+# [Github](https://github.com/Jordan-Atkins/Homework-9)
+
+```{r echo=FALSE}
+food  <- read.csv('groceries.csv')
+solder <- read.csv('solder.csv')
+library(ggplot2)
+
+
+
+```
+
+# Problem 1
+
+## Part A
+
+```{r echo = FALSE}
+
+ggplot(solder, aes(x = Opening, y = skips)) +
+  geom_boxplot() +
+  labs(
+    title = "Relationship Between Solder Gun Opening Size and Number of Skips",
+    x = "Solder Gun Opening Size",
+    y = "Number of Skips"
+  ) +
+  theme_minimal() +labs(caption = 'This grouped boxplot shows that the S opening size has the most skips')
+
+
+ggplot(solder, aes(x = Mask, y = skips)) +
+  geom_boxplot() +
+  labs(
+    title = "Relationship Between Solder Alloy Thickness and Number of Skips",
+    x = "Solder Alloy Thickness",
+    y = "Number of Skips"
+  ) +
+  theme_minimal()+labs(caption = 'This grouped boxplox shows that the A6 thickness has the most skips')
+
+```
+
+## Part B:
+
+```{r echo=FALSE}
+
+library(moderndive)
+
+alloy_model <- lm(skips ~ Opening * Solder, data = solder)
+
+get_regression_table(alloy_model, conf.level = 0.95, digits =2)
+
+
+```
+
+## Part C
+
+The baseline skips is .39. When switching from Opening = L to Opening = M, and Solder remains Thick, the expected number of skips increases by 2.41 on average. When switching from Opening = L to Opening = S, with Thick solder, the number of skips increases by 5.13 on average. → When using Thin instead of Thick solder (with Opening = L), the number of skips increases by 2.28 on average. → The interaction suggests that for Opening = M and Solder = Thin, the combined effect is 0.74 skips fewer than would be expected from simply adding the main effects. However, this is not statistically significant (p = 0.48). For Opening = S and Solder = Thin, there is a strong interaction, leading to an additional 9.65 skips beyond the additive effect
+
+## Part D
+
+I would recommend going with **M** opening size and a Thin Solder. The skips for this style was fewer than the rest of the group. However more testing is needed to determine if this was by chance.
+
+# Problem 2
+
+## Part A
+
+```{r echo = FALSE}
+library(dbplyr)
+library(tidyverse)
+avg_prices <- food %>%
+  group_by(Store) %>%
+  summarize(average_price = mean(Price, na.rm = TRUE))
+ggplot(avg_prices, aes(x = average_price, y = reorder(Store, average_price))) +
+  geom_col() +
+  labs(
+    title = "Average Product Prices Across Stores",
+    x = "Average Price",
+    y = "Store",
+    caption = "This bar chart shows the average product price for each store. It highlights price differences across stores."
+  ) +
+  theme_minimal()
+
+```
+
+## Part B
+
+```{r echo = FALSE}
+
+library(dplyr)
+library(ggplot2)
+library(readr)
+
+# Load your data
+food <- read_csv("groceries.csv")  # Or use the actual file name
+
+# Step 1: Count how many distinct stores each product is sold in
+product_listing_counts <- food %>%
+  group_by(Product) %>%
+  summarize(num_listings = n()) %>%
+  arrange(desc(num_listings))
+
+ggplot(product_listing_counts, aes(x = num_listings, y = reorder(Product, num_listings))) +
+  geom_col(fill = "darkgreen") +
+  labs(
+    title = "Total Number of Product Listings (Including Duplicates)",
+    x = "Number of Listings",
+    y = "Product",
+    caption = "This chart includes all occurrences of products, including repeated entries from the same store."
+  ) +
+  theme_minimal() + theme(
+    axis.text.y = element_text(size = 8),         #]\
+    plot.margin = margin(10, 20, 10, 10),         
+  )
+
+
+```
+
+## Part C
+
+```{r echo = FALSE}
+food$Type <- relevel(factor(food$Type), ref = "Grocery")
+food_model <- lm(Price ~ Type, data = food)
+
+food_model <- lm(Price ~ Product + Type, data = food, conf_level = 0.95, digits=1)
+
+get_regression_table(food_model)
+
+
+```
+
+Convenience stores charge between **\$-0.10** and **\$1.17** more than grocery stores, on average, for the same product.
+
+## Part D
+
+```{r echo=FALSE}
+store_model <- lm(Price ~ Product + Store, data = food)
+get_regression_table(store_model)
+```
+
+When comparing the same product across stores, the two stores that charge the lowest prices are Walmart and Kroger Fresh Fare. On the other hand, the two stores that charge the highest prices are Whole Foods and Wheatsville Food Co-Op.
+
+## Part E
+
+When controlling for the product being sold, Central Market actually charges about \$0.07 more than H-E-B on average. theis difference is very small and likely not practically significant.
+
+## Part
+
+```{r echo = FALSE}
+food <- food %>%
+  mutate(Income10K = Income / 10000)
+
+model_income <- lm(Price ~ Product + Income10K, data = food)
+
+get_regression_table(model_income)
+
+
+
+sd_income <- sd(food$Income10K, na.rm = TRUE)
+sd_price <- sd(food$Price, na.rm = TRUE)
+standardized_effect <- -0.014 * sd_income / sd_price
+standardized_effect
+
+```
+
+A one-standard deviation increase in the income of a ZIP code seems to be associated with a 0.03 standard-deviation decrease in the price that consumers in that ZIP code expect to pay for the same product.
+
+# Problem 3
+
+A: True. As seen in figure A1 the direct positive linear relationship between FAIR polices and Minority Residents is seen
+
+B: FALSE - Despite a positive relationship between minority percentage and age of the property, this relationship is not significant as seen in Figure B1. Instead a direct interaction effect is need to determine if they are related as we already know that minority% is related to FAIR housing
+
+C: True. The data show that the relationship between minority percentage and FAIR policies is stronger in high-fire-risk ZIP codes. the direction and magnitude of the slopes support the statement as factually correct based on the model As seen in model c.
+
+D FALSE: controlling for income does *not* eliminate the association between minority percentage and FAIR policy uptake. The effect remains statistically significant.
+
+E: True. As seen in model e, Minority percentage and FAIR policies remain positively associated even after adjusting for other variables.
